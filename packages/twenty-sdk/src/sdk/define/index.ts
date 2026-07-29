@@ -198,6 +198,10 @@ export {
 } from 'twenty-shared/types';
 export type {
   GridPosition,
+  PageLayoutWidgetCanvasPosition,
   PageLayoutWidgetConditionalDisplay,
+  PageLayoutWidgetGridPosition,
+  PageLayoutWidgetPosition,
   PageLayoutWidgetUniversalConfiguration,
+  PageLayoutWidgetVerticalListPosition,
 } from 'twenty-shared/types';
