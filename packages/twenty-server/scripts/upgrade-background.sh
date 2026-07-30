@@ -3,11 +3,17 @@ set -eu
 
 LOG_FILE="${TWENTY_UPGRADE_LOG_FILE:-/tmp/twenty-upgrade.log}"
 PID_FILE="${TWENTY_UPGRADE_PID_FILE:-/tmp/twenty-upgrade.pid}"
+LOG_MAX_BYTES="${TWENTY_UPGRADE_LOG_MAX_BYTES:-52428800}"
+CAP_FILE="$LOG_FILE.cap"
+CAP_MARKER="--- log capped to $LOG_MAX_BYTES bytes, earlier output dropped, this line is truncated: "
+CAP_EVERY_SECONDS=1
 TAIL_LINES=20
-export LOG_FILE PID_FILE
+SELF="$0"
+export LOG_FILE PID_FILE SELF
 
 upgrade_pid() { [ -s "$PID_FILE" ] && cat "$PID_FILE" || return 1; }
 stream()      { exec tail -f "$LOG_FILE"; }
+log_size()    { stat -c %s "$LOG_FILE" 2>/dev/null || wc -c < "$LOG_FILE" 2>/dev/null | tr -d ' '; }
 
 is_our_upgrade() {
   [ -r "/proc/$1/cmdline" ] || return 0
@@ -40,7 +46,40 @@ last_run() {
   esac
 }
 
+# Started by start() next to the run, never called by hand. Keeps the log under
+# the cap by truncating it in place: the run holds an O_APPEND fd on this inode,
+# so a rotation would leave it writing to the file we moved aside, and O_APPEND
+# writers resume at the new EOF, so shrinking leaves no sparse hole.
+cap() {
+  run_pid=$1
+  [ "$LOG_MAX_BYTES" -gt 0 ] || return 0
+  keep=$((LOG_MAX_BYTES / 2))
+
+  # A trap runs between commands only, so a rewrite in progress always finishes
+  # before this exits, and nothing survives to race the EXIT= line.
+  trap 'exit 0' TERM INT
+
+  # is_our_upgrade also rules out a zombie, whose cmdline reads empty: PID 1 in
+  # the pod never reaps, so kill -0 alone would keep this loop alive forever.
+  while kill -0 "$run_pid" 2>/dev/null && is_our_upgrade "$run_pid"; do
+    sleep "$CAP_EVERY_SECONDS"
+    [ -f "$LOG_FILE" ] || continue
+    size=$(log_size)
+    [ "${size:-0}" -gt "$LOG_MAX_BYTES" ] || continue
+
+    tail -c "$keep" "$LOG_FILE" > "$CAP_FILE" || continue
+    { printf '%s' "$CAP_MARKER"; cat "$CAP_FILE"; } > "$LOG_FILE"
+    rm -f "$CAP_FILE"
+  done
+}
+
 start() {
+  case "$LOG_MAX_BYTES" in
+    '' | *[!0-9]*)
+      echo "Failed to start: TWENTY_UPGRADE_LOG_MAX_BYTES must be a whole number of bytes (0 disables the cap)" >&2
+      exit 1 ;;
+  esac
+
   command -v setsid > /dev/null || {
     echo "Failed to start: setsid not found, cannot detach the run from this terminal" >&2
     echo "Use 'yarn command:prod upgrade' to run it in the foreground instead." >&2
@@ -50,15 +89,23 @@ start() {
   if is_running; then
     echo "Failed to start: already running (pid $(upgrade_pid))" >&2; exit 1
   fi
-  : > "$LOG_FILE"; rm -f "$PID_FILE"
+  : > "$LOG_FILE"; rm -f "$PID_FILE" "$CAP_FILE"
 
   # Not exec: the wrapper has to outlive node to record EXIT=, and stop has to
   # signal node alone, never the process group this would otherwise share.
+  # node stays out of any pipeline so $! names it, and the capper is stopped and
+  # reaped before EXIT= is written so a cap can never eat that line.
   setsid sh -c '
     node dist/command/command upgrade "$@" &
-    echo $! > "$PID_FILE"
-    wait $!
-    echo "EXIT=$?"
+    run_pid=$!
+    echo $run_pid > "$PID_FILE"
+    sh "$SELF" cap $run_pid &
+    cap_pid=$!
+    wait $run_pid
+    code=$?
+    kill -TERM $cap_pid 2>/dev/null
+    wait $cap_pid 2>/dev/null
+    echo "EXIT=$code"
   ' upgrade-background "$@" < /dev/null >> "$LOG_FILE" 2>&1 &
 
   i=0
@@ -116,5 +163,6 @@ case "${1:-}" in
   start) shift; start "$@" ;;
   logs)  logs ;;
   stop)  shift; stop "$@" ;;
+  cap)   shift; cap "$@" ;;
   *) echo "usage: $0 {start [args]|logs|stop [--now|--force]}" >&2; exit 1 ;;
 esac
