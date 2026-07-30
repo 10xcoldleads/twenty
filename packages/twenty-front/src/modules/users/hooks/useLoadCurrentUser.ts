@@ -19,7 +19,7 @@ import { type ColorScheme } from 'twenty-ui/input';
 import { useApolloClient } from '@apollo/client/react';
 import { GetCurrentUserDocument } from '~/generated-metadata/graphql';
 import { getWorkspaceUrl } from '~/utils/getWorkspaceUrl';
-import { dynamicActivate } from '~/utils/i18n/dynamicActivate';
+import { activateLocaleWithoutThrowing } from '~/utils/i18n/activateLocaleWithoutThrowing';
 
 export const useLoadCurrentUser = () => {
   const setCurrentUser = useSetAtomState(currentUserState);
@@ -95,7 +95,7 @@ export const useLoadCurrentUser = () => {
 
       // Initialize unified format preferences state
       initializeFormatPreferences(workspaceMember);
-      dynamicActivate(
+      void activateLocaleWithoutThrowing(
         (workspaceMember.locale as keyof typeof APP_LOCALES) ?? SOURCE_LOCALE,
       );
     }

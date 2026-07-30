@@ -1,8 +1,12 @@
 let preloadScheduled = false;
 
 const preload = () => {
-  void import('@/navigation-menu-item/display/dnd/providers/NavigationMenuItemDndKitProvider');
-  void import('@/navigation-menu-item/display/sections/workspace/components/WorkspaceSectionListDndKit');
+  import('@/navigation-menu-item/display/dnd/providers/NavigationMenuItemDndKitProvider').catch(
+    () => undefined,
+  );
+  import('@/navigation-menu-item/display/sections/workspace/components/WorkspaceSectionListDndKit').catch(
+    () => undefined,
+  );
 };
 
 export const preloadNavigationMenuItemDndKit = (): void => {

@@ -11,9 +11,13 @@ export const IconsProvider = ({ children }: IconsProviderProps) => {
   const [icons, setIcons] = useState<Record<string, IconComponent>>({});
 
   useEffect(() => {
-    import('./internal/AllIcons').then(({ ALL_ICONS }) => {
-      setIcons(ALL_ICONS);
-    });
+    import('./internal/AllIcons')
+      .then(({ ALL_ICONS }) => {
+        setIcons(ALL_ICONS);
+      })
+      .catch(() => {
+        setIcons({});
+      });
   }, []);
 
   return (

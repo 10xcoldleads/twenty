@@ -23,7 +23,7 @@ import {
   GetCurrentUserDocument,
 } from '~/generated-metadata/graphql';
 import { dateLocaleState } from '~/localization/states/dateLocaleState';
-import { dynamicActivate } from '~/utils/i18n/dynamicActivate';
+import { activateLocaleWithoutThrowing } from '~/utils/i18n/activateLocaleWithoutThrowing';
 
 export const UserMetadataProviderInitialEffect = () => {
   const hasAccessTokenPair = useHasAccessTokenPair();
@@ -143,7 +143,7 @@ export const UserMetadataProviderInitialEffect = () => {
 
       initializeFormatPreferences(updatedWorkspaceMember);
 
-      dynamicActivate(
+      void activateLocaleWithoutThrowing(
         (workspaceMember.locale as keyof typeof APP_LOCALES) ?? SOURCE_LOCALE,
       );
     }
