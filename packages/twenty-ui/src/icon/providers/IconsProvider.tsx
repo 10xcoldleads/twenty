@@ -15,8 +15,9 @@ export const IconsProvider = ({ children }: IconsProviderProps) => {
       .then(({ ALL_ICONS }) => {
         setIcons(ALL_ICONS);
       })
-      .catch(() => {
-        setIcons({});
+      .catch((error) => {
+        // oxlint-disable-next-line no-console
+        console.error('Failed to load icons:', error);
       });
   }, []);
 

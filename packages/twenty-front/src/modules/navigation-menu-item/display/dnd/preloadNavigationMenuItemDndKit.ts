@@ -1,11 +1,13 @@
+import { captureExceptionWithoutThrowing } from '~/utils/captureExceptionWithoutThrowing';
+
 let preloadScheduled = false;
 
 const preload = () => {
   import('@/navigation-menu-item/display/dnd/providers/NavigationMenuItemDndKitProvider').catch(
-    () => undefined,
+    captureExceptionWithoutThrowing,
   );
   import('@/navigation-menu-item/display/sections/workspace/components/WorkspaceSectionListDndKit').catch(
-    () => undefined,
+    captureExceptionWithoutThrowing,
   );
 };
 

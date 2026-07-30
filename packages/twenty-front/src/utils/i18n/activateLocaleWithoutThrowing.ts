@@ -1,4 +1,5 @@
 import { type APP_LOCALES } from 'twenty-shared/translations';
+import { captureExceptionWithoutThrowing } from '~/utils/captureExceptionWithoutThrowing';
 import { dynamicActivate } from '~/utils/i18n/dynamicActivate';
 
 export const activateLocaleWithoutThrowing = async (
@@ -6,7 +7,7 @@ export const activateLocaleWithoutThrowing = async (
 ) => {
   try {
     await dynamicActivate(locale);
-  } catch {
-    return;
+  } catch (error) {
+    await captureExceptionWithoutThrowing(error);
   }
 };

@@ -9,7 +9,17 @@ jest.mock('@ui/icon/providers/internal/AllIcons', () => ({
 }));
 
 describe('IconsProvider', () => {
-  it('should still render its children when the icons chunk fails to load', async () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should render its children and report when the icons chunk fails to load', async () => {
     const unhandledRejection = jest.fn();
     process.on('unhandledRejection', unhandledRejection);
 
@@ -22,8 +32,13 @@ describe('IconsProvider', () => {
     expect(screen.getByText('children content')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(unhandledRejection).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to load icons:',
+        expect.any(Error),
+      );
     });
+
+    expect(unhandledRejection).not.toHaveBeenCalled();
 
     process.off('unhandledRejection', unhandledRejection);
   });
