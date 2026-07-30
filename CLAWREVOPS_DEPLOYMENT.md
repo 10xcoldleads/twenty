@@ -1,7 +1,9 @@
 # ClawRevOps Twenty deployment
 
 This fork is kept source-compatible with upstream Twenty. The running CRM uses
-Twenty's official Docker Compose stack without application-code modifications.
+Twenty's official application image. The Compose file has one deployment fix:
+it forwards the documented logic-function and code-interpreter settings to both
+the server and worker containers.
 
 ## Production URL
 
@@ -37,6 +39,9 @@ Secrets live only in the ignored Compose `.env` file. Do not commit that file.
   enroll an authenticator before workspace-wide enforcement can be enabled.
 - The current file store is local. Configure S3-compatible durable storage
   before relying on the CRM for production attachments.
+- Logic functions run with `LOGIC_FUNCTION_TYPE=LOCAL` so trusted workflow code
+  can execute. LOCAL is not sandboxed; only workspace owners should be able to
+  install or edit code steps. `CODE_INTERPRETER_TYPE` remains `DISABLED`.
 
 ## Routine checks
 
@@ -87,9 +92,13 @@ docker exec twenty-db-1 psql -U postgres -d twenty_restore_qa -Atc \
 docker exec twenty-db-1 dropdb -U postgres twenty_restore_qa
 ```
 
-The initial verified backup is
-`/opt/twenty-backups/twenty-initial-verified.dump`. It restored 97 application
-tables successfully.
+Verified backups:
+
+- `/opt/twenty-backups/twenty-initial-verified.dump`
+- `/opt/twenty-backups/twenty-post-acceptance.dump` (853,816 bytes, mode 600)
+
+The post-acceptance backup restored into a disposable database containing 165
+PostgreSQL tables and the disposable database was then removed.
 
 ## Acceptance evidence
 
@@ -107,9 +116,19 @@ Validated against the public HTTPS deployment on 2026-07-31:
 - PostgreSQL custom-format backup and scratch-database restore.
 - Desktop and 390-pixel viewport rendering without horizontal overflow.
 - Server and worker restart counts remained zero after recreation.
+- REST API create, read, update, delete, and revoked-key rejection.
+- Outbound webhook delivery for a person event, followed by webhook removal.
+- Active person-created workflow completion, including domain extraction,
+  company creation, and linking the person to the company.
+- People filtering by email domain and ascending creation-date sorting.
+- Dashboard charts, totals, CRM record counts, and iframe widget rendering.
+- Forty public health requests at ten-way concurrency, all returning HTTP 200.
+- Cloudflare Tunnel restart and automatic public endpoint recovery.
 
-The records and view prefixed with `E2E` or named `Pipeline QA` are deliberate
-acceptance fixtures and can be removed after the remaining module tests finish.
+Records named `E2E Validation`, `Workflow Validation`, `Workflow Repaired`, and
+`ClawRevOps Persistence QA`, plus the task/note prefixed with `E2E` and the
+`Pipeline QA` view, are deliberate acceptance fixtures. Remove them only after
+the remaining module tests finish.
 
 ## Upgrade
 
