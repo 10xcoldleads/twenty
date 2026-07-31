@@ -83,7 +83,7 @@ assert_equal \
   "transactional email uses Resend"
 assert_equal \
   "$(docker exec "$SERVER_CONTAINER" printenv EMAIL_FROM_ADDRESS)" \
-  "notifications@clawrevops.ai" \
+  "crm@notifications.myfbleads.com" \
   "transactional sender uses the verified domain"
 [[ -n "$(docker exec "$SERVER_CONTAINER" printenv EMAIL_SMTP_PASSWORD)" ]] ||
   fail "transactional email credential is missing"

@@ -23,7 +23,7 @@ sed -i \
 
 {
   printf '%s\n' \
-    'EMAIL_FROM_ADDRESS=notifications@clawrevops.ai' \
+    'EMAIL_FROM_ADDRESS=crm@notifications.myfbleads.com' \
     'EMAIL_FROM_NAME=ClawRevOps CRM' \
     'EMAIL_DRIVER=smtp' \
     'EMAIL_SMTP_HOST=smtp.resend.com' \
