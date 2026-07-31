@@ -101,9 +101,14 @@ Verified backups:
 
 - `/opt/twenty-backups/twenty-initial-verified.dump`
 - `/opt/twenty-backups/twenty-post-acceptance.dump` (867,385 bytes, mode 600)
+- `/opt/twenty-backups/twenty-final-2026-07-31.dump` (mode 600; verified by
+  restoring into a disposable database)
 
-The post-acceptance backup restored into a disposable database containing 166
-PostgreSQL tables and the disposable database was then removed.
+Create and prove a new backup with the repository-owned helper:
+
+```sh
+./clawrevops-backup-verify.sh
+```
 
 ## Automated acceptance gate
 
@@ -115,10 +120,12 @@ cd /opt/twenty-crm/packages/twenty-docker
 ./clawrevops-acceptance.sh
 ```
 
-The gate checks container state, health endpoints, workflow runtime settings,
-unauthenticated API denial, private PostgreSQL/Redis networking, workspace auth
-and invite posture, least-privilege member permissions, completed workflow
-evidence, workflow-created relations, and backup permissions.
+The gate checks the exact pinned application image, restart counts, recent
+critical log errors, container state, health endpoints, workflow runtime
+settings, unauthenticated API denial, private PostgreSQL/Redis networking,
+workspace auth and invite posture, least-privilege member permissions,
+completed workflow evidence, workflow-created relations, and backup
+permissions.
 
 ## Acceptance evidence
 
@@ -137,6 +144,8 @@ Validated against the public HTTPS deployment on 2026-07-31:
 - Desktop and 390-pixel viewport rendering without horizontal overflow.
 - Server and worker restart counts remained zero after recreation.
 - REST API create, read, update, delete, and revoked-key rejection.
+- REST API single-record restore through the public Cloudflare URL. The
+  temporary key used for proof was deleted immediately afterward.
 - Outbound webhook delivery for a person event, followed by webhook removal.
 - Active person-created workflow completion, including domain extraction,
   company creation, and linking the person to the company.
@@ -145,7 +154,8 @@ Validated against the public HTTPS deployment on 2026-07-31:
 - Forty public health requests at ten-way concurrency, all returning HTTP 200.
 - Cloudflare Tunnel restart and automatic public endpoint recovery.
 - Custom object and select-field creation, custom-record creation/update, CSV
-  export, and soft deletion.
+  export, soft deletion, REST restoration, and final removal of the temporary
+  custom object.
 - PostgreSQL `ANALYZE` refreshed approximate data-model record counts and query
   planner statistics.
 

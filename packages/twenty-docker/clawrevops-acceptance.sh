@@ -7,7 +7,8 @@ DB_CONTAINER="${DB_CONTAINER:-twenty-db-1}"
 SERVER_CONTAINER="${SERVER_CONTAINER:-twenty-server-1}"
 WORKER_CONTAINER="${WORKER_CONTAINER:-twenty-worker-1}"
 REDIS_CONTAINER="${REDIS_CONTAINER:-twenty-redis-1}"
-BACKUP_FILE="${BACKUP_FILE:-/opt/twenty-backups/twenty-post-acceptance.dump}"
+BACKUP_FILE="${BACKUP_FILE:-/opt/twenty-backups/twenty-final-2026-07-31.dump}"
+EXPECTED_TWENTY_IMAGE="${EXPECTED_TWENTY_IMAGE:-clawrevops/twenty:v2.25.1-clawrevops.1}"
 
 fail() {
   printf 'FAIL: %s\n' "$1" >&2
@@ -43,6 +44,22 @@ assert_equal "$(container_state "$DB_CONTAINER")" "running" "database container 
 assert_equal "$(container_health "$DB_CONTAINER")" "healthy" "database container is healthy"
 assert_equal "$(container_state "$REDIS_CONTAINER")" "running" "Redis container is running"
 assert_equal "$(container_health "$REDIS_CONTAINER")" "healthy" "Redis container is healthy"
+assert_equal \
+  "$(docker inspect --format '{{.Config.Image}}' "$SERVER_CONTAINER")" \
+  "$EXPECTED_TWENTY_IMAGE" \
+  "server runs the pinned ClawRevOps image"
+assert_equal \
+  "$(docker inspect --format '{{.Config.Image}}' "$WORKER_CONTAINER")" \
+  "$EXPECTED_TWENTY_IMAGE" \
+  "worker runs the pinned ClawRevOps image"
+assert_equal \
+  "$(docker inspect --format '{{.RestartCount}}' "$SERVER_CONTAINER")" \
+  "0" \
+  "server has not restarted unexpectedly"
+assert_equal \
+  "$(docker inspect --format '{{.RestartCount}}' "$WORKER_CONTAINER")" \
+  "0" \
+  "worker has not restarted unexpectedly"
 
 assert_equal \
   "$(docker exec "$SERVER_CONTAINER" printenv LOGIC_FUNCTION_TYPE)" \
@@ -64,6 +81,18 @@ pass "local health endpoint"
 curl -fsS "$PUBLIC_URL/healthz" >/dev/null ||
   fail "public health endpoint failed"
 pass "public health endpoint"
+
+for container in "$SERVER_CONTAINER" "$WORKER_CONTAINER"; do
+  recent_runtime_errors="$(
+    docker logs --since 10m "$container" 2>&1 |
+      grep -Eic 'Missing lock|stalled more than allowable limit|unhandled|fatal' ||
+      true
+  )"
+  assert_equal \
+    "$recent_runtime_errors" \
+    "0" \
+    "$container has no critical runtime errors in the last 10 minutes"
+done
 
 unauthenticated_status="$(
   curl -sS -o /dev/null -w '%{http_code}' "$PUBLIC_URL/rest/people"

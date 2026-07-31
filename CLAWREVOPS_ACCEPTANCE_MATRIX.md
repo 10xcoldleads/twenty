@@ -27,11 +27,11 @@ The gate must pass before and after every deployment or upgrade.
 | Opportunities | Kanban view creation and drag/move from Screening to Proposal persisted. |
 | Tasks and notes | Related task and note creation persisted and appeared in global search. |
 | Dashboards | CRM charts, totals, counts, rich text, and iframe widget rendered. |
-| Custom data model | Created `Acceptance Asset`, added a select field, and created/updated a record with that field. |
+| Custom data model | Created `Acceptance Asset`, added a select field, created/updated a record, and removed the temporary object after testing. |
 | Export | A custom record exported to a valid CSV file. |
-| Soft delete | The custom record received a non-null `deletedAt` timestamp in PostgreSQL. |
+| Soft delete and restore | The custom record received a non-null `deletedAt`, then `PATCH /rest/restore/acceptanceAssets/{id}` returned HTTP 200 and PostgreSQL confirmed it active. |
 | Workflows | Person-created automation completed, derived a domain, created/found a company, and linked the person. |
-| REST API | Temporary key passed create/read/update/delete, was revoked, and then returned HTTP 403. |
+| REST API | Temporary keys passed create/read/update/delete and single-record restore. Keys were revoked or deleted after testing, and rejected keys returned HTTP 403. |
 | Webhooks | Person event reached a temporary receiver; the webhook was then removed. |
 | Backup and restore | Custom-format PostgreSQL backup restored into a disposable database with 166 tables; disposable database was removed. |
 | Resilience | Application-tier and Cloudflare Tunnel restarts recovered with persisted records and sessions. |
@@ -67,6 +67,8 @@ The gate must pass before and after every deployment or upgrade.
   the stack to an always-on Linux VPS.
 - The deleted-record command was discovered through command search rather than
   the view options menu. This is functional but less discoverable than it should
-  be for non-technical users.
+  be for non-technical users. The REST restore-path bug encountered during this
+  test is corrected in the pinned ClawRevOps image and protected by regression
+  tests.
 - Data-model record counts use PostgreSQL planner estimates. New or restored
   tables can display zero until PostgreSQL runs `ANALYZE`.
