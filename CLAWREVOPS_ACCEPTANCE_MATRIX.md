@@ -33,7 +33,8 @@ The gate must pass before and after every deployment or upgrade.
 | Workflows | Person-created automation completed, derived a domain, created/found a company, and linked the person. |
 | REST API | Temporary keys passed create/read/update/delete and single-record restore. Keys were revoked or deleted after testing, and rejected keys returned HTTP 403. |
 | Webhooks | Person event reached a temporary receiver; the webhook was then removed. |
-| Backup and restore | Custom-format PostgreSQL backup restored into a disposable database with 166 tables; disposable database was removed. |
+| Transactional email | Resend SMTP is configured with a sending-only key scoped to `clawrevops.ai`; Twenty accepted a password-reset request and Resend recorded delivery to the owner address. |
+| Backup and restore | Custom-format PostgreSQL backup restored into a disposable database with all 97 current source tables; disposable database was removed. |
 | Resilience | Application-tier and Cloudflare Tunnel restarts recovered with persisted records and sessions. |
 | Controlled load | 40 public health requests at ten-way concurrency all returned HTTP 200 with zero container restarts. |
 | Responsive baseline | Desktop and 390×844 viewport checks found no horizontal page overflow on the primary CRM screens. |

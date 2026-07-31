@@ -73,6 +73,21 @@ assert_equal \
   "$(docker exec "$WORKER_CONTAINER" printenv CODE_INTERPRETER_TYPE)" \
   "DISABLED" \
   "untrusted code interpreter is disabled"
+assert_equal \
+  "$(docker exec "$SERVER_CONTAINER" printenv EMAIL_DRIVER)" \
+  "smtp" \
+  "transactional email uses SMTP"
+assert_equal \
+  "$(docker exec "$SERVER_CONTAINER" printenv EMAIL_SMTP_HOST)" \
+  "smtp.resend.com" \
+  "transactional email uses Resend"
+assert_equal \
+  "$(docker exec "$SERVER_CONTAINER" printenv EMAIL_FROM_ADDRESS)" \
+  "notifications@clawrevops.ai" \
+  "transactional sender uses the verified domain"
+[[ -n "$(docker exec "$SERVER_CONTAINER" printenv EMAIL_SMTP_PASSWORD)" ]] ||
+  fail "transactional email credential is missing"
+pass "transactional email credential is installed"
 
 curl -fsS http://127.0.0.1:3000/healthz >/dev/null ||
   fail "local health endpoint failed"

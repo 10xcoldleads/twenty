@@ -122,10 +122,10 @@ cd /opt/twenty-crm/packages/twenty-docker
 
 The gate checks the exact pinned application image, restart counts, recent
 critical log errors, container state, health endpoints, workflow runtime
-settings, unauthenticated API denial, private PostgreSQL/Redis networking,
-workspace auth and invite posture, least-privilege member permissions,
-completed workflow evidence, workflow-created relations, and backup
-permissions.
+settings, Resend transactional-email configuration, unauthenticated API denial,
+private PostgreSQL/Redis networking, workspace auth and invite posture,
+least-privilege member permissions, completed workflow evidence,
+workflow-created relations, and backup permissions.
 
 ## Acceptance evidence
 
