@@ -3,7 +3,8 @@ set -euo pipefail
 
 ENV_FILE="${ENV_FILE:-/opt/twenty-crm/packages/twenty-docker/.env}"
 
-IFS= read -r resend_api_key
+resend_api_key=''
+IFS= read -r resend_api_key || [[ -n "$resend_api_key" ]]
 [[ "$resend_api_key" =~ ^re_[A-Za-z0-9_-]{20,}$ ]] || {
   printf 'Invalid Resend key format\n' >&2
   exit 1
