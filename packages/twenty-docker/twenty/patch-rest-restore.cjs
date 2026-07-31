@@ -4,11 +4,10 @@ const fs = require('node:fs');
 const parserPath =
   '/app/packages/twenty-server/dist/engine/api/rest/input-request-parsers/path-parser-utils/parse-core-path.utils.js';
 
-const vulnerable = `if (queryAction.length > 2 ||
-        (queryAction.length > 3 && queryAction[0] === 'restore')) {`;
-const corrected = `const isRestoreRequest = queryAction[0] === 'restore';
-    if ((!isRestoreRequest && queryAction.length > 2) ||
-        (isRestoreRequest && queryAction.length > 3)) {`;
+const vulnerable =
+  "if (queryAction.length > 2 || queryAction.length > 3 && queryAction[0] === 'restore') {";
+const corrected =
+  "const isRestoreRequest = queryAction[0] === 'restore';\n    if (!isRestoreRequest && queryAction.length > 2 || isRestoreRequest && queryAction.length > 3) {";
 
 const source = fs.readFileSync(parserPath, 'utf8');
 const matches = source.split(vulnerable).length - 1;
