@@ -12,9 +12,11 @@ export const parseCorePath = (
     .split('/')
     .filter(Boolean);
 
+  const isRestoreRequest = queryAction[0] === 'restore';
+
   if (
-    queryAction.length > 2 ||
-    (queryAction.length > 3 && queryAction[0] === 'restore')
+    (!isRestoreRequest && queryAction.length > 2) ||
+    (isRestoreRequest && queryAction.length > 3)
   ) {
     throw new BadRequestException(
       `Query path '${request.path}' invalid. Valid examples: /rest/companies/id or /rest/companies or /rest/batch/companies`,

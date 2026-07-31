@@ -1,0 +1,10 @@
+ARG UPSTREAM_TAG=v2.25.1
+FROM twentycrm/twenty:${UPSTREAM_TAG}
+
+USER root
+COPY patch-rest-restore.cjs /tmp/patch-rest-restore.cjs
+RUN node /tmp/patch-rest-restore.cjs && rm /tmp/patch-rest-restore.cjs
+USER 1000
+
+LABEL org.opencontainers.image.title="ClawRevOps Twenty CRM"
+LABEL org.opencontainers.image.description="Pinned Twenty image with the REST single-record restore parser correction"

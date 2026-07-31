@@ -32,7 +32,12 @@ Secrets live only in the ignored Compose `.env` file. Do not commit that file.
 
 - Password authentication is enabled.
 - Public invite links are disabled.
+- Workspace discovery is hidden.
 - Multi-workspace mode is disabled.
+- Google and Microsoft sign-in are disabled until their OAuth credentials are
+  configured; password authentication remains enabled.
+- The default `Member` role cannot soft-delete or permanently destroy all
+  workspace records. The `Admin` role retains full control.
 - PostgreSQL and Redis are private Docker services.
 - Cloudflare Tunnel is the only public application path.
 - Two-factor authentication is available but not yet enforced. The owner must
@@ -95,10 +100,25 @@ docker exec twenty-db-1 dropdb -U postgres twenty_restore_qa
 Verified backups:
 
 - `/opt/twenty-backups/twenty-initial-verified.dump`
-- `/opt/twenty-backups/twenty-post-acceptance.dump` (853,816 bytes, mode 600)
+- `/opt/twenty-backups/twenty-post-acceptance.dump` (867,385 bytes, mode 600)
 
-The post-acceptance backup restored into a disposable database containing 165
+The post-acceptance backup restored into a disposable database containing 166
 PostgreSQL tables and the disposable database was then removed.
+
+## Automated acceptance gate
+
+Run the repository-owned production gate after deployment, configuration
+changes, backups, or upgrades:
+
+```sh
+cd /opt/twenty-crm/packages/twenty-docker
+./clawrevops-acceptance.sh
+```
+
+The gate checks container state, health endpoints, workflow runtime settings,
+unauthenticated API denial, private PostgreSQL/Redis networking, workspace auth
+and invite posture, least-privilege member permissions, completed workflow
+evidence, workflow-created relations, and backup permissions.
 
 ## Acceptance evidence
 
@@ -124,6 +144,10 @@ Validated against the public HTTPS deployment on 2026-07-31:
 - Dashboard charts, totals, CRM record counts, and iframe widget rendering.
 - Forty public health requests at ten-way concurrency, all returning HTTP 200.
 - Cloudflare Tunnel restart and automatic public endpoint recovery.
+- Custom object and select-field creation, custom-record creation/update, CSV
+  export, and soft deletion.
+- PostgreSQL `ANALYZE` refreshed approximate data-model record counts and query
+  planner statistics.
 
 Records named `E2E Validation`, `Workflow Validation`, `Workflow Repaired`, and
 `ClawRevOps Persistence QA`, plus the task/note prefixed with `E2E` and the

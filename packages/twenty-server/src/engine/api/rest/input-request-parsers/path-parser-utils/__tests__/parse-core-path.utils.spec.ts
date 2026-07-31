@@ -73,4 +73,36 @@ describe('parseCorePath', () => {
       id: undefined,
     });
   });
+
+  it('should parse a single-record restore request', () => {
+    const request: any = {
+      path: `/rest/restore/companies/${testUUID}`,
+    };
+
+    expect(parseCorePath(request)).toEqual({
+      object: 'companies',
+      id: testUUID,
+    });
+  });
+
+  it('should parse a restore-many request', () => {
+    const request: any = {
+      path: '/rest/restore/companies',
+    };
+
+    expect(parseCorePath(request)).toEqual({
+      object: 'companies',
+      id: undefined,
+    });
+  });
+
+  it('should reject an overlong restore request', () => {
+    const request: any = {
+      path: `/rest/restore/companies/${testUUID}/extra`,
+    };
+
+    expect(() => parseCorePath(request)).toThrow(
+      `Query path '/rest/restore/companies/${testUUID}/extra' invalid. Valid examples: /rest/companies/id or /rest/companies or /rest/batch/companies`,
+    );
+  });
 });
